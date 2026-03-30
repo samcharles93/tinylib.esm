@@ -1,0 +1,52 @@
+{
+    "name": "@samcharles93/tinylib.esm",
+    "version": "1.2.0",
+    "description": "A tiny, zero-dependency lib for frontend routing and navigation on top of `window.history`.",
+    "main": "dist/tinylib.router.esm.mjs",
+    "module": "dist/tinylib.router.esm.mjs",
+    "unpkg": "dist/tinylib.router.esm.global.js",
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": "./dist/tinylib.router.esm.mjs",
+            "default": "./dist/tinylib.router.esm.global.js"
+        },
+        "./router": {
+            "import": "./dist/tinylib.router.esm.mjs",
+            "default": "./dist/tinylib.router.esm.global.js"
+        },
+        "./state": {
+            "import": "./dist/tinylib.state.esm.mjs",
+            "default": "./dist/tinylib.state.esm.global.js"
+        }
+    },
+    "files": [
+        "dist",
+        "src"
+    ],
+    "scripts": {
+        "build": "node build.js",
+        "dev": "node server.js",
+        "serve": "node server.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/samcharles93/tinylib.esm.git"
+    },
+    "keywords": [
+        "router",
+        "routing",
+        "history",
+        "spa"
+    ],
+    "author": "Sam Catlow <sam@catlow.tech>",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/samcharles93/tinylib.esm/issues"
+    },
+    "homepage": "https://github.com/samcharles93/tinylib.esm#readme",
+    "publishConfig": {
+        "access": "public"
+    }
+}
