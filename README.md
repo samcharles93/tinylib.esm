@@ -209,17 +209,13 @@ r.on('/admin', {
 
 ## Demos
 
-See [DEMOS.md](./DEMOS.md) for detailed instructions on running the demos.
-
-- [**Quick Test**](https://knadh.github.io/tinylib.esm/test.html) - Verify libraries load correctly
-- [**tinylib.router.esm Demo**](https://knadh.github.io/tinylib.esm/404.html) - Original router demo
-- [**tinylib.state.esm Demo**](https://knadh.github.io/tinylib.esm/tinylib.state.esm-demo.html) - State management features
-- [**Integration Demo**](https://knadh.github.io/tinylib.esm/integration-demo.html) - Both libraries together
+- [**Tiny Router Demo**](https://samcharles93.github.io/tinylib.esm/demo-router.html) - Demonstrates routing, parameters, groups, and guards.
+- [**Tiny State Demo**](https://samcharles93.github.io/tinylib.esm/demo-state.html) - Demonstrates reactive state, actions, computed properties, and persistence.
 
 To run locally:
 ```bash
 npm run dev
-# Open http://localhost:8000/test.html
+# Open http://localhost:8000/
 ```
 
 ---

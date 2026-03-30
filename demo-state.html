@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tinylib.state.esm Demo</title>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; padding: 2rem; max-width: 600px; margin: auto; line-height: 1.5; color: #333; background: #f9f9f9; }
+        h1 { color: #2c3e50; }
+        .card { padding: 1.5rem; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        h2 { margin-top: 0; color: #2980b9; }
+        .btn { padding: 0.5rem 1rem; cursor: pointer; border: none; background: #3498db; color: white; border-radius: 4px; font-size: 1rem; transition: background 0.2s; }
+        .btn:hover { background: #2980b9; }
+        .btn-danger { background: #e74c3c; }
+        .btn-danger:hover { background: #c0392b; }
+        input[type="text"] { padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+        .controls { display: flex; gap: 0.5rem; margin-top: 1rem; }
+        .log-container { margin-top: 1.5rem; }
+        .log { padding: 1rem; background: #2c3e50; color: #a8ff60; font-family: monospace; height: 150px; overflow-y: auto; border-radius: 8px; font-size: 0.9em; }
+    </style>
+    <script type="importmap">
+    {
+        "imports": {
+            "@samcharles93/tinylib.esm/state": "./src/tinylib.state.esm.js"
+        }
+    }
+    </script>
+</head>
+<body>
+    <h1>Tiny State Demo</h1>
+    
+    <div class="card">
+        <h2>Counter (Reactivity & Computed)</h2>
+        <p>Current Count: <strong id="count-val" style="font-size: 1.2em;">0</strong></p>
+        <p>Computed Value (Count * 2): <strong id="computed-val">0</strong></p>
+        <div class="controls">
+            <button class="btn" data-action="increment" data-amount="1">+1</button>
+            <button class="btn" data-action="increment" data-amount="5">+5</button>
+            <button class="btn btn-danger" data-action="decrement" data-amount="1">-1</button>
+            <button class="btn btn-danger" data-action="reset">Reset</button>
+        </div>
+        <p style="font-size: 0.8em; color: #666; margin-top: 1rem;">Note: Decrementing below 0 is blocked by an action hook.</p>
+    </div>
+
+    <div class="card">
+        <h2>User Info (Persistence)</h2>
+        <div id="user-info" style="display: none;">
+            <p>Logged in as: <strong id="username-display"></strong></p>
+            <button class="btn btn-danger" data-action="logout">Logout</button>
+        </div>
+        <div id="login-form">
+            <input type="text" id="username-input" placeholder="Enter your name">
+            <button class="btn" data-action="login">Login</button>
+        </div>
+        <p style="font-size: 0.8em; color: #666; margin-top: 1rem;">State is persisted to sessionStorage. Try refreshing the page!</p>
+    </div>
+
+    <div class="log-container">
+        <h3>State Change Log</h3>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script type="module">
+        import state from '@samcharles93/tinylib.esm/state';
+
+        const logEl = document.getElementById('log');
+        function log(msg) {
+            logEl.innerHTML += `<div>> ${msg}</div>`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        // Initialize Store
+        const store = state.new({
+            initialState: {
+                count: 0,
+                user: null
+            },
+            computed: {
+                doubled: (s) => s.count * 2
+            },
+            storageKey: 'tinylib-state-demo',
+            storageType: 'sessionStorage'
+        });
+
+        // Define Actions
+        store.action('increment', (s, payload) => {
+            s.count += parseInt(payload?.amount || 1, 10);
+        });
+
+        store.action('decrement', {
+            // Hook to cancel the action if condition is met
+            before: (s) => {
+                if (s.count <= 0) {
+                    log('Action blocked: Cannot decrement below 0.');
+                    return false;
+                }
+            },
+            do: (s, payload) => {
+                s.count -= parseInt(payload?.amount || 1, 10);
+            }
+        });
+
+        store.action('reset', (s) => { s.count = 0; });
+
+        store.action('login', (s) => {
+            const name = document.getElementById('username-input').value.trim();
+            if (name) {
+                s.user = { name };
+                document.getElementById('username-input').value = '';
+            }
+        });
+
+        store.action('logout', (s) => { s.user = null; });
+
+        // Set up Watchers to update UI
+        store.watch('count', (newVal, oldVal) => {
+            document.getElementById('count-val').textContent = newVal;
+            log(`Count changed: ${oldVal} -> ${newVal}`);
+        });
+
+        store.watch('doubled', (newVal) => {
+            document.getElementById('computed-val').textContent = newVal;
+        });
+
+        store.watch('user', (user) => {
+            if (user) {
+                document.getElementById('user-info').style.display = 'block';
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('username-display').textContent = user.name;
+                log(`User logged in: ${user.name}`);
+            } else {
+                document.getElementById('user-info').style.display = 'none';
+                document.getElementById('login-form').style.display = 'block';
+                log('User logged out');
+            }
+        });
+
+        // Automatically bind [data-action] elements to store.dispatch()
+        store.bind(document);
+        
+        // Trigger initial renders
+        store.state.count = store.state.count;
+        store.state.user = store.state.user;
+        log('Store initialized (using sessionStorage)');
+    </script>
+</body>
+</html>

@@ -22,7 +22,7 @@ const MIME_TYPES = {
 };
 
 const server = http.createServer(async (req, res) => {
-    let filePath = path.join(__dirname, req.url === '/' ? 'tinylib.state.esm-demo.html' : req.url);
+    let filePath = path.join(__dirname, req.url === '/' ? 'demo-router.html' : req.url);
     
     const ext = path.extname(filePath);
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
@@ -53,9 +53,8 @@ server.listen(PORT, () => {
 ║  http://localhost:${PORT}/                              ║
 ║                                                        ║
 ║  Demos:                                                ║
-║  • http://localhost:${PORT}/tinylib.state.esm-demo.html         ║
-║  • http://localhost:${PORT}/integration-demo.html       ║
-║  • http://localhost:${PORT}/404.html                    ║
+║  • http://localhost:${PORT}/demo-router.html            ║
+║  • http://localhost:${PORT}/demo-state.html             ║
 ╚════════════════════════════════════════════════════════╝
     
 Press Ctrl+C to stop the server.

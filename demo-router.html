@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tinylib.router.esm Demo</title>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; padding: 2rem; max-width: 600px; margin: auto; line-height: 1.5; color: #333; background: #f9f9f9; }
+        h1 { color: #2c3e50; }
+        nav { margin-bottom: 1.5rem; padding: 1rem; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; flex-wrap: wrap; gap: 1rem; }
+        nav a { text-decoration: none; color: #3498db; font-weight: 500; }
+        nav a:hover { color: #2980b9; }
+        #app { padding: 1.5rem; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; min-height: 150px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .log-container { margin-top: 1.5rem; }
+        .log { padding: 1rem; background: #2c3e50; color: #a8ff60; font-family: monospace; height: 150px; overflow-y: auto; border-radius: 8px; font-size: 0.9em; }
+    </style>
+    <script type="importmap">
+    {
+        "imports": {
+            "@samcharles93/tinylib.esm/router": "./src/tinylib.router.esm.js"
+        }
+    }
+    </script>
+</head>
+<body>
+    <h1>Tiny Router Demo</h1>
+    <nav>
+        <a href="/" data-route>Home</a>
+        <a href="/users/123" data-route>User 123</a>
+        <a href="/users/456/settings" data-route>User 456 Settings</a>
+        <a href="/admin/dashboard" data-route>Admin (Guarded)</a>
+        <a href="/unknown-page" data-route>404 Page</a>
+    </nav>
+
+    <div id="app"></div>
+    
+    <div class="log-container">
+        <h3>Navigation Log</h3>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script type="module">
+        import router from '@samcharles93/tinylib.esm/router';
+
+        const app = document.getElementById('app');
+        const logEl = document.getElementById('log');
+
+        function log(msg) {
+            logEl.innerHTML += `<div>> ${msg}</div>`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        // Initialize Router
+        const r = router.new({
+            defaultHandler: (ctx) => {
+                app.innerHTML = `<h2 style="color: #e74c3c;">404 - Not Found</h2><p>No route matched: <code>${ctx.path}</code></p>`;
+                log(`404 Default Handler: ${ctx.path}`);
+            }
+        });
+
+        // Global beforeEach hook
+        r.beforeEach((ctx) => {
+            log(`Navigating to: ${ctx.path}`);
+        });
+
+        // Basic Route
+        r.on('/', () => {
+            app.innerHTML = `<h2>Home</h2><p>Welcome to the tinylib.router.esm demo. Click the links above to navigate.</p>`;
+            log('Rendered Home View');
+        });
+
+        // Route with parameters
+        r.on('/users/{id}', (ctx) => {
+            app.innerHTML = `<h2>User Profile</h2><p>Viewing profile for user ID: <strong>${ctx.params.id}</strong></p>`;
+            log(`Rendered User Profile (ID: ${ctx.params.id})`);
+        });
+
+        // Nested/complex path with parameters
+        r.on('/users/{id}/settings', (ctx) => {
+            app.innerHTML = `<h2>User Settings</h2><p>Managing settings for user ID: <strong>${ctx.params.id}</strong></p>`;
+            log(`Rendered User Settings (ID: ${ctx.params.id})`);
+        });
+
+        // Route Group with a guard
+        const admin = r.group('/admin', {
+            before: (ctx) => {
+                const isConfirmed = confirm("Guard Check: This is a secure route. Press OK to simulate being authenticated.");
+                if (!isConfirmed) {
+                    log('Navigation blocked by admin guard.');
+                    return false; // Cancels navigation
+                }
+            }
+        });
+
+        admin.on('/dashboard', () => {
+            app.innerHTML = `<h2>Admin Dashboard</h2><p>Welcome to the secure admin area.</p>`;
+            log('Rendered Admin Dashboard');
+        });
+
+        // Start listening to history events and render initial route
+        r.ready();
+    </script>
+</body>
+</html>
