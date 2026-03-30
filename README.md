@@ -1,28 +1,29 @@
 # tinylib.esm
 
-A tiny, vanilla JS client-side router for single-page apps on top of the browser's `window.history` API.
-No dependencies and ~4 KB minified+gzipped. Ideal for simple vanilla JS single-page applications, using with AlpineJS etc.
+A collection of tiny, vanilla JS libraries for building single-page applications with no dependencies.
 
-## Companion Library: tinylib.state.esm
+- **tinylib.router.esm**: A tiny router (~4 KB minified+gzipped) built on the browser's `window.history` API.
+- **tinylib.state.esm**: A tiny reactive state management library (~800 bytes minified+gzipped).
 
-Looking for state management? Check out [tinylib.state.esm](./README-tinylib.state.esm.md) - a tiny reactive state management library designed to work standalone or alongside tinylib.esm. Same design philosophy, same tiny footprint (~3.5 KB).
+---
 
-## Features
+## tinylib.router.esm (Router)
 
+A tiny, vanilla JS client-side router for single-page apps. Ideal for simple vanilla JS single-page applications, using with AlpineJS etc.
+
+### Features
 - Dynamic route parameters using the `{param}` syntax
 - Route grouping with shared handlers
 - Support for before/after handler hooks
 - Automatic optional binding to `<a>` and other tags for navigation
 
-[**View demo**](https://knadh.github.io/tinylib.esm/demo)
+### Usage
 
-## Usage
-
-```
+```bash
 npm install @samcharles93/tinylib.esm
 ```
 
-### Basic
+#### Basic
 
 ```javascript
 import router from '@samcharles93/tinylib.esm/router';
@@ -42,7 +43,7 @@ r.ready();
 r.navigate('/users/42', { filter: 'active' }, 'settings');
 ```
 
-### Advanced
+#### Advanced
 
 ```javascript
 // Route with before/handler hooks.
@@ -61,30 +62,9 @@ const admin = r.group('/admin', {
 // callback on the group is triggered for all of them. 
 admin.on('/dashboard', (ctx) => renderDashboard());
 admin.on('/users/{id}', (ctx) => renderUserEditor(ctx.params.id));
-
-// Programmatic navigation.
-r.navigate('/users/42', { filter: 'active' }, 'settings');
 ```
 
-See the [demo source](https://github.com/samcharles93/tinylib.esm/blob/master/404.html) for a full working example.
-
-## Demos
-
-See [DEMOS.md](./DEMOS.md) for detailed instructions on running the demos.
-
-- **Quick Test**: [test.html](https://knadh.github.io/tinylib.esm/test.html) - Verify libraries load correctly
-- **tinylib.esm Demo**: [404.html](https://knadh.github.io/tinylib.esm/404.html) - Original router demo
-- **tinylib.state.esm Demo**: [tinylib.state.esm-demo.html](https://knadh.github.io/tinylib.esm/tinylib.state.esm-demo.html) - State management features
-- **Integration Demo**: [integration-demo.html](https://knadh.github.io/tinylib.esm/integration-demo.html) - Both libraries together
-
-### Running Locally
-
-```bash
-npm run dev
-# Open http://localhost:8000/test.html
-```
-
-### Global handlers
+#### Global handlers
 
 You can register global handlers that run for every navigation:
 
@@ -98,13 +78,9 @@ r.beforeEach((ctx) => {
 r.afterEach((ctx) => {
   console.log('global afterEach', ctx.path, ctx.location.pathname);
 });
-// Order: global beforeEach -> group before -> route before -> on -> route after -> group after -> global afterEach
-
 ```
 
-Multiple `beforeEach` and `afterEach` handlers may be registered; they run in the order they were added.
-
-### Link binding
+#### Link binding
 
 Simply add the `data-route` attribute to links for automatic on-click navigation.
 
@@ -112,18 +88,170 @@ Simply add the `data-route` attribute to links for automatic on-click navigation
 <a href="/users/42" data-route>View User</a>
 ```
 
+---
 
-## API
+## tinylib.state.esm (State Management)
+
+A tiny, vanilla JS reactive state management library for frontend applications.
+
+### Features
+- **Reactive State**: Proxy-based reactivity for automatic updates
+- **Computed Properties**: Derived state that auto-updates when dependencies change
+- **Actions with Hooks**: State mutations with before/do/after lifecycle hooks
+- **Watchers**: Subscribe to specific state changes
+- **Auto-binding**: Automatic event binding to elements with `data-action` attribute
+- **Persistence**: Optional localStorage/sessionStorage sync
+
+### Usage
+
+```bash
+npm install @samcharles93/tinylib.esm/state
+```
+
+#### Basic
+
+```javascript
+import state from '@samcharles93/tinylib.esm/state';
+
+// Create store with initial state
+const store = state.new({
+  initialState: {
+    count: 0,
+    user: null
+  }
+});
+
+// Watch for changes
+store.watch('count', (newVal, oldVal) => {
+  console.log('count changed:', newVal);
+});
+
+// Define actions
+store.action('increment', (state, payload) => {
+  state.count += payload?.amount || 1;
+});
+
+// Dispatch actions
+await store.dispatch('increment', { amount: 5 });
+
+// Auto-bind to elements
+store.bind(document);
+```
+
+```html
+<button data-action="increment" data-amount="5">+5</button>
+```
+
+#### Advanced (Computed, Hooks, Persistence)
+
+```javascript
+const store = state.new({
+  initialState: { count: 0 },
+  computed: {
+    doubled: (state) => state.count * 2
+  },
+  storageKey: 'my-app-settings', // Optional persistence
+  storageType: 'localStorage'
+});
+
+// Actions with hooks
+store.action('login', {
+  before: (state, credentials) => {
+    if (!credentials.email) return false; // Cancel action
+  },
+  do: (state, credentials) => {
+    state.user = { email: credentials.email };
+  }
+});
+```
+
+#### Data Action Attributes
+
+When using `store.bind()`, elements with `data-action` can include additional data attributes:
+
+```html
+<button data-action="setPage" data-page="2" data-filter="active">Page 2</button>
+```
+
+---
+
+## Integration
+
+Using both libraries together:
+
+```javascript
+import router from '@samcharles93/tinylib.esm/router';
+import state from '@samcharles93/tinylib.esm/state';
+
+const r = router.new();
+const store = state.new({
+  initialState: { currentPage: 'home' }
+});
+
+// Update state on route changes
+r.beforeEach((ctx) => {
+  store.state.currentPage = ctx.path;
+});
+
+// Protect routes based on state
+r.on('/admin', {
+  before: (ctx) => {
+    if (!store.state.user?.isAdmin) {
+      r.navigate('/login');
+      return false;
+    }
+  },
+  on: (ctx) => console.log('Admin panel')
+});
+```
+
+---
+
+## Demos
+
+See [DEMOS.md](./DEMOS.md) for detailed instructions on running the demos.
+
+- [**Quick Test**](https://knadh.github.io/tinylib.esm/test.html) - Verify libraries load correctly
+- [**tinylib.router.esm Demo**](https://knadh.github.io/tinylib.esm/404.html) - Original router demo
+- [**tinylib.state.esm Demo**](https://knadh.github.io/tinylib.esm/tinylib.state.esm-demo.html) - State management features
+- [**Integration Demo**](https://knadh.github.io/tinylib.esm/integration-demo.html) - Both libraries together
+
+To run locally:
+```bash
+npm run dev
+# Open http://localhost:8000/test.html
+```
+
+---
+
+## API Reference
+
+### Router API
 
 | Method | Description |
 |--------|-------------|
-| `router.New(options)` | Creates a new router instance. See `_default_options{}` in the source code for options. |
+| `router.new(options)` | Creates a new router instance |
 | `r.on(path, handler)` | Registers a route handler |
 | `r.group(prefix, handlers{})` | Creates a group of routes with a common prefix |
 | `r.ready()` | Initializes the router |
 | `r.navigate(path, query, hash, pushState)` | Navigates to a new route |
-| `r.bind(parent)` | Binds navigate() onclick of all elements in the parent tagged with `data-route` |
-| `r.beforeEach(handler)` | Registers a global handler that runs before every navigation |
-| `r.afterEach(handler)` | Registers a global handler that runs after every navigation |
+| `r.bind(parent)` | Binds navigate() onclick of elements with `data-route` |
+| `r.beforeEach(handler)` | Runs before every navigation |
+| `r.afterEach(handler)` | Runs after every navigation |
+
+### State API
+
+| Method | Description |
+|--------|-------------|
+| `state.new(options{})` | Creates a new store instance |
+| `store.watch(key, callback)` | Subscribe to changes on a state key |
+| `store.action(name, handler)` | Register an action |
+| `store.dispatch(name, payload)` | Execute an action by name |
+| `store.bind(parent)` | Binds action dispatch to elements with `data-action` |
+| `store.getState()` | Get the reactive state proxy |
+| `store.setState(newState)` | Replace entire state |
+| `store.clearStorage()` | Clear persisted state from storage |
+
+## License
 
 Licensed under the MIT License.
